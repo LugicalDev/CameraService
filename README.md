@@ -1,9 +1,5 @@
-Created by Lugical in September, 2022
 # CameraService
-<<<<<<< HEAD
 Created by Lugical in September, 2022
-=======
->>>>>>> 9cbafe5b868971d0a165bc568a834401d7dd353a
 CameraService is my first open-source, serving as an alternative to the default Roblox camera system. I decided to create a custom camera system that lets developers of all kinds be able to implement new, breathtaking camera views into their games and experiences with relative ease compared to having to do it out by themselves. This system is for Roblox game development. 
 
 ## The Features
@@ -38,7 +34,6 @@ The list of features goes on and on, some of which include:
     Properties include:
 **`"CharacterVisibility" (string):`** Determines what part of the character is visible.
         when it's the host. "All" shows all parts, "Body" hides the head, & "None" hides the whole body.
-<<<<<<< HEAD
 **"`MinZoom" (number)`:** Determines how close the player can zoom in. In studs.
 **`"MaxZoom" (number):`** Determines how far the player can zoom out. In studs.
 **`"Zoom" (number):`** The current distance the camera is away from the host.
@@ -47,16 +42,6 @@ Intervals from 0-1 are suggested. Intervals higher could be used to create a "ci
 **`"Offset" (CFrame):`** Determines the offset/positioning away from the camera host.
         Can be used to simulate shift-lock.
 **`"LockMouse" (boolean):`** Has the mouse locked in at the center.
-=======
-        **"`MinZoom" (number)`:** Determines how close the player can zoom in. In studs.
-        **`"MaxZoom" (number):`** Determines how far the player can zoom out. In studs.
-        **`"Zoom" (number):`** The current distance the camera is away from the host.
-        **`"Smoothness" (number):`** Determines how smooth the camera movement is.
-        Intervals from 0-1 are suggested. Intervals higher could be used to create a "cinematic" effect.
-        **`"Offset" (CFrame):`** Determines the offset/positioning away from the camera host.
-        Can be used to simulate shift-lock.
-        **`"LockMouse" (boolean):`** Has the mouse locked in at the center.
->>>>>>> 9cbafe5b868971d0a165bc568a834401d7dd353a
 		**`"AlignChar" (boolean):`** If set to true, the character will rotate itself based off the camera (highly advised for shift-locks and first person)
 		**`"BodyFollow" (boolean):`** If AlignChar is NOT enabled, BodyFollow allows for an effect that has the upper body slightly rotate based off the mouse location.
 
@@ -119,8 +104,4 @@ workspace.ExplosionPart.Touched:Connect(function(hit)
     end
 end)
 
-<<<<<<< HEAD
 ```
-=======
-```
->>>>>>> 9cbafe5b868971d0a165bc568a834401d7dd353a
