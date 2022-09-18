@@ -273,7 +273,7 @@ function CameraService:SetCameraView(__type: string) --> Used to change views (i
 			local rightHold = self.LockMouse or UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
 			local mobile = input.UserInputType == Enum.UserInputType.Touch
 			local console = input.UserInputType == Enum.UserInputType.Gamepad1 and input.KeyCode == Enum.KeyCode.Thumbstick2
-			if (not gpe or self.LockMouse) and (rightHold or mobile or console) and input.UserInputState == Enum.UserInputState.Change then
+			if (not gpe) and (rightHold or mobile or console) and input.UserInputState == Enum.UserInputState.Change then
 				delta = console and input.Position / 15 * math.sqrt(UserInputService.MouseDeltaSensitivity) or input.Delta --> Get mouse position
 				differenceVector = console and Vector2.new(delta.X, -delta.Y) or {X = math.sqrt(math.abs(delta.X)) / (mobile and 27 or 50), Y = math.sqrt(math.abs(delta.Y)) / (mobile and 27 or 50)}
 				--> Adjust the positions
