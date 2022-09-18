@@ -196,19 +196,19 @@ local function updateCamera(deltaTime) --> Update camera each frame
 	--> Extraneous character alignment features if needed
 	if self.Host.Parent == currentCharacter then
 		local humanoid, root = currentCharacter:FindFirstChild("Humanoid"), currentCharacter:FindFirstChild("HumanoidRootPart")
-		local waist = currentCharacter.UpperTorso:FindFirstChildWhichIsA("Motor6D")
-		local neck = currentCharacter.Head:FindFirstChildWhichIsA("Motor6D")
-		if not waistCache then
+		local waist = humanoid.RigType == Enum.HumanoidRigType.R15 and currentCharacter.UpperTorso:FindFirstChildWhichIsA("Motor6D") or nil
+		local neck = humanoid.RigType == Enum.HumanoidRigType.R15 and currentCharacter.Head:FindFirstChildWhichIsA("Motor6D") or nil
+		if waist and not waistCache then
 			waistCache = waist.C0
 		end
-		if not neckCache then
+		if  neck and not neckCache then
 			neckCache = neck.C0
 		end
 		if self.AlignChar and humanoid.FloorMaterial ~= Enum.Material.Water then
-			if waistCache and waist.C0 ~= waistCache then
+			if waist and waistCache and waist.C0 ~= waistCache then
 				waist.C0 = waistCache
 			end
-			if neckCache and neck.C0 ~= neckCache then
+			if neck and neckCache and neck.C0 ~= neckCache then
 				neck.C0 = neckCache
 			end
 			local _, x, _ = camCFrame:ToEulerAnglesYXZ()
@@ -217,17 +217,17 @@ local function updateCamera(deltaTime) --> Update camera each frame
 			if self.BodyFollow then
 				waist.C0 = waist.C0:Lerp((CFrame.fromEulerAnglesYXZ(0, math.rad(mouse.Hit.LookVector:Dot((CFrame.Angles(root.CFrame:ToEulerAnglesYXZ()) * CFrame.new(-1,0,0)).Position.Unit) * 40), 0) + (waistCache).Position), 0.25)
 				neck.C0 = neck.C0:Lerp((CFrame.fromEulerAnglesYXZ(math.rad(mouse.Hit.LookVector:Dot(Vector3.new(0,1,0)) * 40), 0, 0) + (neckCache).Position), 0.25)
-				if not waistCache then
+				if waist and not waistCache then
 					waistCache = waist.C0
 				end
-				if not neckCache then
+				if neck and not neckCache then
 					neckCache = neck.C0
 				end
 			else
-				if waistCache and waist.C0 ~= waistCache then
+				if waist and waistCache and waist.C0 ~= waistCache then
 					waist.C0 = waistCache
 				end
-				if neckCache and neck.C0 ~= neckCache then
+				if neck and neckCache and neck.C0 ~= neckCache then
 					neck.C0 = neckCache
 				end
 			end
