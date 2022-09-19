@@ -23,9 +23,11 @@ The list of features goes on and on, some of which include:
     `settingsArray` should have values for camera view properties as seen below in :Change().
     If no value is provided, a default one will be placed within.
 
-   > **:LockCameraPanning(xAxis: boolean, yAxis: boolean)**
+   > **:LockCameraPanning(xAxis: boolean, yAxis: boolean, lockAtX: number, lockAtY: number)**
     Locks camera movement from right-to-left (x-axis) or up-down (y-axis)
-
+	3rd and 4th parameters are optional. If the camera is locked, it'll lock at the rotation of those parameters.
+	Input should be in degrees for that.
+    
    > **:SetCameraHost(newHost: BasePart)**
     Has the camera focus in on the input part. Must be a BASEPART (not a model).
     To reset the host back to the player's character, you can leave the parameters blank.
@@ -63,6 +65,10 @@ Intervals from 0-1 are suggested. Intervals higher could be used to create a "ci
    > **:Tilt(degree: number)**
     Tilts the camera across the z-axis on whatever object it is currently focusing on. 
     Useful for creating camera effects. Input a number in degrees.
+
+   > **:TiltAllAxes(y: number, x: number, z: number)**
+    Like :Tilt, but allows you to adjust all 3 axes. Most likely use-case would be for creating camera effects.
+	Inputs in Y, X, Z order.
 
 
 ## Examples

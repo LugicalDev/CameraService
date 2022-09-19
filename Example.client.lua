@@ -13,6 +13,9 @@ local uiButton = ui.TextButton
 local uiFrame1 = ui.Frame1
 local uiFrame2 = ui.Frame2
 local function resetToNormal()
+	game.Lighting.DepthOfField.Enabled = false
+	game.Lighting.ColorCorrection.Saturation = -0.2
+	game.Lighting.ColorCorrection.Contrast = 0.2
 	CameraService:ChangeSensitivity(1)
 	uiFrame1:TweenPosition(UDim2.new(0,0,-.1360,0), "Out", "Sine", .25, true)
 	uiFrame2:TweenPosition(UDim2.new(0,0,1,0), "Out", "Sine", .25, true)
@@ -25,7 +28,7 @@ local information = {
 	Smoothness = 10,
 	CharacterVisibility = "All",
 	MinZoom = 10,
-	MaxZoom = 10.001,
+	MaxZoom = 10,
 	Zoom = 10,
 	AlignChar = false,
 	Offset = CFrame.new(),
@@ -33,9 +36,25 @@ local information = {
 	BodyFollow = false
 }
 
-CameraService:SetCameraView("ThirdPerson")
 CameraService:CreateNewCameraView("Cinematic", information) --> Uses info to create a new camera view!
+CameraService:SetCameraView("ThirdPerson")
 
+--[[ 2D platformer
+local info = {
+	Smoothness = 3,
+	CharacterVisibility = "All",
+	MinZoom = 15,
+	MaxZoom = 15,
+	Zoom = 15,
+	AlignChar = false,
+	Offset = CFrame.new(0,0,0),
+	LockMouse = false,
+	BodyFollow = false
+}
+
+CameraService:CreateNewCameraView("2D_test", info) --> Uses info to create a new camera view!
+CameraService:LockCameraPanning(true, true, 90, 0)
+]]
 uiButton.MouseButton1Click:Connect(function()
 	resetToNormal()
 	uiButton.Visible = false
@@ -73,6 +92,9 @@ workspace.CinematicPart.ProximityPrompt.Triggered:Connect(function()
 	if player.Character then
 		player.Character.Humanoid.WalkSpeed = 12
 	end
+	game.Lighting.ColorCorrection.Saturation = -0.45
+	game.Lighting.ColorCorrection.Contrast = 0.45
+	game.Lighting.DepthOfField.Enabled = true
 	CameraService:ChangeFOV(90, false)
 end)
 

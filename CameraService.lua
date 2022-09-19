@@ -13,8 +13,10 @@
     settingsArray should have values for camera view properties as seen below.
     If no value is provided, a default one will be placed within.
 
-    > :LockCameraPanning(xAxis: boolean, yAxis: boolean)
+    > :LockCameraPanning(xAxis: boolean, yAxis: boolean, lockAtX: number, lockAtY: number)
     Locks camera movement from right-to-left (x-axis) or up-down (y-axis)
+	3rd and 4th parameters are optional. If the camera is locked, it'll lock at the rotation of those parameters.
+	Input should be in degrees for that.
 
     > :SetCameraHost(newHost: BasePart)
     Has the camera focus in on the input part. Must be a BASEPART (not a model).
@@ -53,6 +55,10 @@
     Tilts the camera across the z-axis on whatever object it is currently focusing on. 
     Useful for creating camera effects. Input a number in degrees.
 
+	> :TiltAllAxes(y: number, x: number, z: number)
+    Like :Tilt, but allows you to adjust all 3 axes. Most likely use-case would be for creating camera effects.
+	Inputs in Y, X, Z order.
+
     Created by @Lugical | Reased September, 2022
 --]]
 
@@ -65,13 +71,13 @@ math.randomseed(tick())
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
 ---> Player & Camera Objects <---
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
 local cam = workspace.CurrentCamera or workspace:WaitForChild("Camera")
-
 
 ---> Camera System Variables <---
 local TWEEN_INFO = TweenInfo.new(.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
@@ -183,8 +189,8 @@ local function updateCamera(deltaTime) --> Update camera each frame
 	local self = CameraService
 	if UserInputService.GamepadEnabled then --> Set logic for CONSOLE camera movement
 		cameraRotation -= differenceVector
-		cameraRotation = Vector2.new(self.xLock and 0 or cameraRotation.X, self.yLock and 0 or math.clamp(cameraRotation.Y, math.rad(-45), math.rad(45)))
 	end
+	cameraRotation = Vector2.new(self.xLock and self.atX or cameraRotation.X, self.yLock and self.atY or math.clamp(cameraRotation.Y, math.rad(-45), math.rad(45)))
 	currentCamPosition = self.Host.Position + Vector3.new(0, self.Host.Parent == currentCharacter and 2.5 or 0,0)
 	--> Convert cameraRotation into an angle CFrame (YXZ = Angles)
 	local rotationCFrame = CFrame.fromEulerAnglesYXZ(cameraRotation.Y, cameraRotation.X, 0)
@@ -192,43 +198,45 @@ local function updateCamera(deltaTime) --> Update camera each frame
 	offset = self.Shaking and offset and updateShake == 0 and calculateShakingOffset(self.ShakingIntensity) or self.Shaking and offset or Vector3.new(0,0,0)
 	local camPos = raycastWorld(self.Zoom, rotationCFrame)
 	local camCFrame = (rotationCFrame * self.TiltFactor * self.Offset) + camPos
-	cam.CFrame = self.Smoothness <= 0 and  camCFrame or cam.CFrame:Lerp(camCFrame, (deltaTime * (self.Smoothness > 1 and 10 / self.Smoothness or 10 + (30 * (1 - self.Smoothness/1.2)))))
+	cam.CFrame = self.Smoothness <= 0 and camCFrame or cam.CFrame:Lerp(camCFrame, (deltaTime * (self.Smoothness > 1 and 10 / self.Smoothness or 10 + (30 * (1 - self.Smoothness/1.2)))))
 	--> Extraneous character alignment features if needed
 	if self.Host.Parent == currentCharacter then
 		local humanoid, root = currentCharacter:FindFirstChild("Humanoid"), currentCharacter:FindFirstChild("HumanoidRootPart")
 		local waist = humanoid.RigType == Enum.HumanoidRigType.R15 and currentCharacter.UpperTorso:FindFirstChildWhichIsA("Motor6D") or nil
 		local neck = humanoid.RigType == Enum.HumanoidRigType.R15 and currentCharacter.Head:FindFirstChildWhichIsA("Motor6D") or nil
-		if waist and not waistCache then
-			waistCache = waist.C0
-		end
-		if  neck and not neckCache then
-			neckCache = neck.C0
-		end
-		if self.AlignChar and humanoid.FloorMaterial ~= Enum.Material.Water then
-			if waist and waistCache and waist.C0 ~= waistCache then
-				waist.C0 = waistCache
+		if humanoid and humanoid.Health > 0 then
+			if waist and not waistCache then
+				waistCache = waist.C0
 			end
-			if neck and neckCache and neck.C0 ~= neckCache then
-				neck.C0 = neckCache
+			if  neck and not neckCache then
+				neckCache = neck.C0
 			end
-			local _, x, _ = camCFrame:ToEulerAnglesYXZ()
-			root.CFrame = CFrame.fromEulerAnglesYXZ(0, x + math.rad(self.Offset.X == 0 and 0 or -6), 0) + root.Position
-		elseif humanoid.RigType == Enum.HumanoidRigType.R15 then
-			if self.BodyFollow then
-				waist.C0 = waist.C0:Lerp((CFrame.fromEulerAnglesYXZ(0, math.rad(mouse.Hit.LookVector:Dot((CFrame.Angles(root.CFrame:ToEulerAnglesYXZ()) * CFrame.new(-1,0,0)).Position.Unit) * 40), 0) + (waistCache).Position), 0.25)
-				neck.C0 = neck.C0:Lerp((CFrame.fromEulerAnglesYXZ(math.rad(mouse.Hit.LookVector:Dot(Vector3.new(0,1,0)) * 40), 0, 0) + (neckCache).Position), 0.25)
-				if waist and not waistCache then
-					waistCache = waist.C0
-				end
-				if neck and not neckCache then
-					neckCache = neck.C0
-				end
-			else
+			if self.AlignChar and humanoid.FloorMaterial ~= Enum.Material.Water then
 				if waist and waistCache and waist.C0 ~= waistCache then
 					waist.C0 = waistCache
 				end
 				if neck and neckCache and neck.C0 ~= neckCache then
 					neck.C0 = neckCache
+				end
+				local _, x, _ = camCFrame:ToEulerAnglesYXZ()
+				root.CFrame = CFrame.fromEulerAnglesYXZ(0, x + math.rad(self.Offset.X == 0 and 0 or -6), 0) + root.Position
+			elseif humanoid.RigType == Enum.HumanoidRigType.R15 then
+				if self.BodyFollow then
+					waist.C0 = waist.C0:Lerp((CFrame.fromEulerAnglesYXZ(math.rad(mouse.Hit.LookVector:Dot(Vector3.new(0,1,0)) * 10), math.rad(mouse.Hit.LookVector:Dot((CFrame.Angles(root.CFrame:ToEulerAnglesYXZ()) * CFrame.new(-1,0,0)).Position.Unit) * 40), 0) + waistCache.Position), 0.25)
+					neck.C0 = neck.C0:Lerp((CFrame.fromEulerAnglesYXZ(math.rad(mouse.Hit.LookVector:Dot(Vector3.new(0,1,0)) * 30), 0, 0) + neckCache.Position), 0.25)
+					if waist and not waistCache then
+						waistCache = waist.C0
+					end
+					if neck and not neckCache then
+						neckCache = neck.C0
+					end
+				else
+					if waist and waistCache and waist.C0 ~= waistCache then
+						waist.C0 = waistCache
+					end
+					if neck and neckCache and neck.C0 ~= neckCache then
+						neck.C0 = neckCache
+					end
 				end
 			end
 		end
@@ -273,7 +281,7 @@ function CameraService:SetCameraView(__type: string) --> Used to change views (i
 			local rightHold = self.LockMouse or UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
 			local mobile = input.UserInputType == Enum.UserInputType.Touch
 			local console = input.UserInputType == Enum.UserInputType.Gamepad1 and input.KeyCode == Enum.KeyCode.Thumbstick2
-			if (not gpe) and (rightHold or mobile or console) and input.UserInputState == Enum.UserInputState.Change then
+			if (not gpe or (not mobile and not console)) and (rightHold or mobile or console) and input.UserInputState == Enum.UserInputState.Change then
 				delta = console and input.Position / 15 * math.sqrt(UserInputService.MouseDeltaSensitivity) or input.Delta --> Get mouse position
 				differenceVector = console and Vector2.new(delta.X, -delta.Y) or {X = math.sqrt(math.abs(delta.X)) / (mobile and 27 or 50), Y = math.sqrt(math.abs(delta.Y)) / (mobile and 27 or 50)}
 				--> Adjust the positions
@@ -291,7 +299,7 @@ function CameraService:SetCameraView(__type: string) --> Used to change views (i
 				--> Update rotation once if not console; console updates rotation on each frame
 				if not console then
 					cameraRotation -= differenceVector
-					cameraRotation = Vector2.new(self.xLock and 0 or cameraRotation.X, self.yLock and 0 or math.clamp(cameraRotation.Y, math.rad(-45), math.rad(45)))
+					cameraRotation = Vector2.new(self.xLock and self.atX or cameraRotation.X, self.yLock and self.atY or math.clamp(cameraRotation.Y, math.rad(-45), math.rad(45)))
 				end
 			end
 			UserInputService.MouseBehavior = self.LockMouse and Enum.MouseBehavior.LockCenter or rightHold and Enum.MouseBehavior.LockCurrentPosition or Enum.MouseBehavior.Default
@@ -326,14 +334,16 @@ function CameraService:CreateNewCameraView(id: string, settingsArray) --> Create
 	end
 end
 
-function CameraService:LockCameraPanning(lockXAxis: boolean, lockYAxis: boolean) --> Lock go brr
+function CameraService:LockCameraPanning(lockXAxis: boolean, lockYAxis: boolean, lockAtX: number, lockAtY: number) --> Lock go brr
+	self.atX = math.rad(lockAtX) or 0
+	self.atY = math.rad(lockAtY) or 0
 	self.xLock = lockXAxis
 	self.yLock = lockYAxis
 end
 
 function CameraService:SetCameraHost(newHost: BasePart) --> For when you change the object the camera focuses on
 	assert(not newHost or typeof(newHost) == "Instance" and newHost:IsA("BasePart"), "[CameraService] :SetCameraHost() only accepts a BasePart parameter, or none at all. ")
-	self.Host = newHost or currentCharacter:WaitForChild("LowerTorso")
+	self.Host = newHost or currentCharacter:FindFirstChild("LowerTorso") or currentCharacter:FindFirstChild("HumanoidRootPart")
 end
 
 function CameraService:Change(property: string, newVal: any, changeDefaultProperty: boolean) --> To change camera aspects/properties.
@@ -369,14 +379,20 @@ function CameraService:Shake(intensity: number, duration: number) --> Quakes mor
 	self.Shaking = false
 end
 
-function CameraService:Tilt(degree: number) --> Tilt on Z axis. Converts degree to rads. Tilt go brr.
-	self.TiltFactor = CFrame.fromEulerAnglesYXZ(0,0, math.rad(degree))
+function CameraService:Tilt(degree: number) --> Converts degree to rads. Tilt go brr. 
+	self.TiltFactor = CFrame.fromEulerAnglesYXZ(0, 0, math.rad(degree) or 0)
 end
+
+function CameraService:TiltAllAxes(y: number, x: number, z: number) --> Converts degree to rads. Tilt go brr. 
+	self.TiltFactor = CFrame.fromEulerAnglesYXZ(math.rad(y) or 0, math.rad(x) or 0, math.rad(z) or 0)
+end
+
 
 player.CharacterAdded:Connect(function(char) --> Have camera reset focus to new character.
 	if tostring(CameraService.Host.Parent) == player.Name then
 		currentCharacter = char
-		CameraService.Host = CameraService.Host.Parent.Name == player.Name and char:WaitForChild("LowerTorso") or CameraService.Host
+		local humanoid = currentCharacter:WaitForChild("Humanoid")
+		CameraService.Host = CameraService.Host.Parent.Name == player.Name and (humanoid.RigType == Enum.HumanoidRigType.R15 and char:FindFirstChild("LowerTorso") or humanoid.RigType == Enum.HumanoidRigType.R6 and char:FindFirstChild("HumanoidRootPart")) or CameraService.Host
 	end
 end)
 
