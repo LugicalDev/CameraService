@@ -335,8 +335,8 @@ function CameraService:CreateNewCameraView(id: string, settingsArray) --> Create
 end
 
 function CameraService:LockCameraPanning(lockXAxis: boolean, lockYAxis: boolean, lockAtX: number, lockAtY: number) --> Lock go brr
-	self.atX = math.rad(lockAtX) or 0
-	self.atY = math.rad(lockAtY) or 0
+	self.atX = lockAtX and math.rad(lockAtX) or 0
+	self.atY = lockAtY and math.rad(lockAtY) or 0
 	self.xLock = lockXAxis
 	self.yLock = lockYAxis
 end
@@ -384,7 +384,7 @@ function CameraService:Tilt(degree: number) --> Converts degree to rads. Tilt go
 end
 
 function CameraService:TiltAllAxes(y: number, x: number, z: number) --> Converts degree to rads. Tilt go brr. 
-	self.TiltFactor = CFrame.fromEulerAnglesYXZ(math.rad(y) or 0, math.rad(x) or 0, math.rad(z) or 0)
+	self.TiltFactor = CFrame.fromEulerAnglesYXZ(y and math.rad(y) or 0, x and math.rad(x) or 0, z and math.rad(z) or 0)
 end
 
 
