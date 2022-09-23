@@ -166,7 +166,7 @@ local function raycastWorld(currentZoom, rotationCFrame) --> Correct zoom to avo
 	--> Set params w/blacklist
 	local params = RaycastParams.new()
 	params.IgnoreWater = true
-	if  CameraService.Host.Parent ~= workspace and CameraService.Host.Parent:IsA("Model") then
+	if  CameraService.Host.Parent ~= workspace and CameraService.Host.Parent and CameraService.Host.Parent:IsA("Model") then
 		params.FilterDescendantsInstances = {currentCharacter, CameraService.Host.Parent}
 	else
 		params.FilterDescendantsInstances = {currentCharacter, CameraService.Host}
@@ -191,7 +191,7 @@ local function updateCamera(deltaTime) --> Update camera each frame
 		cameraRotation -= differenceVector
 	end
 	cameraRotation = Vector2.new(self.xLock and self.atX or cameraRotation.X, self.yLock and self.atY or math.clamp(cameraRotation.Y, math.rad(-45), math.rad(45)))
-	currentCamPosition = self.Host.Position + Vector3.new(0, self.Host.Parent == currentCharacter and 2.5 or 0,0)
+	currentCamPosition = self.Host.Position + Vector3.new(0, self.Host.Parent and self.Host.Parent == currentCharacter and 2.5 or 0,0)
 	--> Convert cameraRotation into an angle CFrame (YXZ = Angles)
 	local rotationCFrame = CFrame.fromEulerAnglesYXZ(cameraRotation.Y, cameraRotation.X, 0)
 	updateShake = updateShake < math.random(2,3) and updateShake + 1 or 0
@@ -392,7 +392,7 @@ player.CharacterAdded:Connect(function(char) --> Have camera reset focus to new 
 	if tostring(CameraService.Host.Parent) == player.Name then
 		currentCharacter = char
 		local humanoid = currentCharacter:WaitForChild("Humanoid")
-		CameraService.Host = CameraService.Host.Parent.Name == player.Name and (humanoid.RigType == Enum.HumanoidRigType.R15 and char:FindFirstChild("LowerTorso") or humanoid.RigType == Enum.HumanoidRigType.R6 and char:FindFirstChild("HumanoidRootPart")) or CameraService.Host
+		CameraService.Host = CameraService.Host.Parent and CameraService.Host.Parent.Name == player.Name and (humanoid.RigType == Enum.HumanoidRigType.R15 and char:FindFirstChild("LowerTorso") or humanoid.RigType == Enum.HumanoidRigType.R6 and char:FindFirstChild("HumanoidRootPart")) or CameraService.Host
 	end
 end)
 
