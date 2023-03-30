@@ -92,10 +92,10 @@ local waistCache;
 local neckCache;
 local cameraSettings = { --> Built-in camera views
 	["Default"] = {},
-	["FirstPerson"] = {CharacterVisibility = "None", Smoothness = 1, Zoom = 0, AlignChar = true, Offset = CFrame.new(0,0,0), LockMouse = true, MinZoom = 0, MaxZoom = 0, BodyFollow = true},
+	["FirstPerson"] = {CharacterVisibility = "None", Smoothness = .7, Zoom = 0, AlignChar = true, Offset = CFrame.new(0,0,0), LockMouse = true, MinZoom = 0, MaxZoom = 0, BodyFollow = true},
 	["FirstPersonVariant"] = {CharacterVisibility = "Body", Smoothness = .35, Zoom = 0, AlignChar = true, Offset = CFrame.new(0,0.2,.75), LockMouse = true, MinZoom = 0, MaxZoom = 0, BodyFollow = true},
-	["ThirdPerson"] = {CharacterVisibility = "All", Smoothness = 1, Zoom = 10, AlignChar = false, Offset = CFrame.new(0,0,0), LockMouse = false, MinZoom = 5, MaxZoom = 15, BodyFollow = true},
-	["ShiftLock"] = {CharacterVisibility = "All", Smoothness = 0.75, Zoom = 7.5, Offset = CFrame.new(1.75, 0.5, 1), LockMouse = true, AlignChar = true, MinZoom = 2, MaxZoom = 15, BodyFollow = true},
+	["ThirdPerson"] = {CharacterVisibility = "All", Smoothness = .7, Zoom = 10, AlignChar = false, Offset = CFrame.new(0,0,0), LockMouse = false, MinZoom = 5, MaxZoom = 15, BodyFollow = true},
+	["ShiftLock"] = {CharacterVisibility = "All", Smoothness = 0.7, Zoom = 7.5, Offset = CFrame.new(1.75, 0.5, 1), LockMouse = true, AlignChar = true, MinZoom = 2, MaxZoom = 15, BodyFollow = true},
 }
 local connectionList = {}
 local propertyTypes = { --> For camera views
@@ -190,22 +190,23 @@ local function updateCamera(deltaTime) --> Update camera each frame
 	if UserInputService.GamepadEnabled then --> Set logic for CONSOLE camera movement
 		cameraRotation -= differenceVector
 	end
-	warn(deltaTime)
-	cameraRotation = Vector2.new(self.xLock and self.atX or cameraRotation.X, self.yLock and self.atY or math.clamp(cameraRotation.Y, math.rad(-25), math.rad(25))) 
+	--warn(deltaTime)
+	cameraRotation = Vector2.new(self.xLock and self.atX or cameraRotation.X, self.yLock and self.atY or math.clamp(cameraRotation.Y, math.rad(-60), math.rad(60))) 
 	currentCamPosition = self.Host.Position + Vector3.new(0, self.Host.Parent and self.Host.Parent == currentCharacter and 2.5 or 0,0)
 	--> Convert cameraRotation into an angle CFrame (YXZ = Angles)
 	local rotationCFrame = CFrame.fromEulerAnglesYXZ(cameraRotation.Y, cameraRotation.X, 0)
 	updateShake = updateShake < math.random(2,3) and updateShake + 1 or 0
 	offset = self.Shaking and offset and updateShake == 0 and calculateShakingOffset(self.ShakingIntensity) or self.Shaking and offset or Vector3.new(0,0,0)
-	local camPos = raycastWorld(self.Zoom, rotationCFrame)
+	local camPos = raycastWorld(self.Zoom, rotationCFrame) 
 	local camCFrame = (rotationCFrame * self.TiltFactor * self.Offset) + camPos
-	cam.CFrame = self.Smoothness <= 0 and camCFrame or cam.CFrame:Lerp(camCFrame, (deltaTime * (self.Smoothness > 1 and 10 / self.Smoothness or 10 + (30 * (1 - self.Smoothness/1.2)))))
+	cam.CFrame = self.Smoothness <= 0 and  camCFrame or cam.CFrame:Lerp(camCFrame, (.014 / deltaTime) * (1/((self.Smoothness+1)^1.5)))--(deltaTime * (self.Smoothness > 1 and 5 / self.Smoothness or 5 + (20 * (1 - self.Smoothness/1.2)))))
 	--> Extraneous character alignment features if needed
 	if self.Host.Parent == currentCharacter then
+		workspace.Retargeting = Enum.AnimatorRetargetingMode.Disabled
 		local humanoid, root = currentCharacter:FindFirstChild("Humanoid"), currentCharacter:FindFirstChild("HumanoidRootPart")
-		local waist = humanoid.RigType == Enum.HumanoidRigType.R15 and currentCharacter.UpperTorso:FindFirstChildWhichIsA("Motor6D") or nil
-		local neck = humanoid.RigType == Enum.HumanoidRigType.R15 and currentCharacter.Head:FindFirstChildWhichIsA("Motor6D") or nil
 		if humanoid and humanoid.Health > 0 then
+			local waist = humanoid.RigType == Enum.HumanoidRigType.R15 and currentCharacter.UpperTorso:FindFirstChildWhichIsA("Motor6D") or nil
+			local neck = humanoid.RigType == Enum.HumanoidRigType.R15 and currentCharacter.Head:FindFirstChildWhichIsA("Motor6D") or nil
 			if waist and not waistCache then
 				waistCache = waist.C0
 			end
@@ -254,14 +255,18 @@ function CameraService:SetCameraView(__type: string) --> Used to change views (i
 	end
 	RunService:UnbindFromRenderStep("CameraUpdate")
 	if __type == "Default" then --> Resets it back to non-scriptable, Roblox default camera
-		cam.CameraType = Enum.CameraType.Custom
+		self.LockMouse = false
 		cam.CameraSubject = currentCharacter:WaitForChild("Humanoid")
+		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+		cam.CameraType = Enum.CameraType.Custom
+		workspace.Retargeting = Enum.AnimatorRetargetingMode.Default
 	elseif cameraSettings[__type] then
 		--> Add in settings
+		workspace.Retargeting = Enum.AnimatorRetargetingMode.Disabled
 		if self.Host.Parent and self.Host.Parent == currentCharacter then
 			hideBodyParts(self.CharacterVisibility ~= "None" and self.CharacterVisibility or nil)
 		end
-		UserInputService.MouseBehavior = self.LockMouse and Enum.MouseBehavior.LockCenter or Enum.MouseBehavior.Default
+		UserInputService.MouseBehavior = self.LockMouse and __type ~= "Default" and Enum.MouseBehavior.LockCenter or Enum.MouseBehavior.Default
 		cam.CameraType = Enum.CameraType.Scriptable
 		cam.CameraSubject = nil
 		local function updateZoom(input, gpe) --> For camera zooming in/out
@@ -300,7 +305,7 @@ function CameraService:SetCameraView(__type: string) --> Used to change views (i
 				--> Update rotation once if not console; console updates rotation on each frame
 				if not console then
 					cameraRotation -= differenceVector
-					cameraRotation = Vector2.new(self.xLock and self.atX or cameraRotation.X, self.yLock and self.atY or math.clamp(cameraRotation.Y, math.rad(-25), math.rad(25)))
+					cameraRotation = Vector2.new(self.xLock and self.atX or cameraRotation.X, self.yLock and self.atY or math.clamp(cameraRotation.Y, math.rad(-60), math.rad(60)))
 				end
 			end
 			UserInputService.MouseBehavior = self.LockMouse and Enum.MouseBehavior.LockCenter or rightHold and Enum.MouseBehavior.LockCurrentPosition or Enum.MouseBehavior.Default
@@ -320,7 +325,7 @@ function CameraService:SetCameraView(__type: string) --> Used to change views (i
 		table.insert(connectionList, UserInputService.InputBegan:Connect(onInputChange))
 		table.insert(connectionList, UserInputService.InputChanged:Connect(onInputChange))
 		table.insert(connectionList, UserInputService.InputEnded:Connect(onInputChange))
-		RunService:BindToRenderStep("CameraUpdate", Enum.RenderPriority.Camera.Value - 1, updateCamera)
+		RunService:BindToRenderStep("CameraUpdate", 1, updateCamera)
 	end
 end
 
