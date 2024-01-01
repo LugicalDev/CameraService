@@ -17,26 +17,26 @@ local function resetToNormal()
 	game.Lighting.ColorCorrection.Saturation = -0.2
 	game.Lighting.ColorCorrection.Contrast = 0.2
 	CameraService:ChangeSensitivity(1)
-	uiFrame1:TweenPosition(UDim2.new(0,0,-.1360,0), "Out", "Sine", .25, true)
-	uiFrame2:TweenPosition(UDim2.new(0,0,1,0), "Out", "Sine", .25, true)
+	--uiFrame1:TweenPosition(UDim2.new(0,0,-.1360,0), "Out", "Sine", .25, true)
+	--uiFrame2:TweenPosition(UDim2.new(0,0,1,0), "Out", "Sine", .25, true)
 	if player.Character then
 		player.Character.Humanoid.WalkSpeed = 16
 	end
 	CameraService:ChangeFOV(70, false)
 end
-local information = {
-	Smoothness = 10,
-	CharacterVisibility = "All",
-	MinZoom = 10,
-	MaxZoom = 10,
-	Zoom = 10,
-	AlignChar = false,
-	Offset = CFrame.new(),
-	LockMouse = false,
-	BodyFollow = false
-}
+--local information = {
+--	Smoothness = 5,
+--	CharacterVisibility = "All",
+--	MinZoom = 10,
+--	MaxZoom = 10,
+--	Zoom = 10,
+--	AlignChar = false,
+--	Offset = CFrame.new(),
+--	LockMouse = false,
+--	BodyFollow = false
+--}
 
-CameraService:CreateNewCameraView("Cinematic", information) --> Uses info to create a new camera view!
+--CameraService:CreateNewCameraView("Cinematic", information) --> Uses info to create a new camera view!
 CameraService:SetCameraView("ThirdPerson")
 
 --[[ 2D platformer
@@ -87,8 +87,8 @@ end)
 workspace.CinematicPart.ProximityPrompt.Triggered:Connect(function()
 	CameraService:SetCameraView("Cinematic")
 	CameraService:ChangeSensitivity(0.333)
-	uiFrame1:TweenPosition(UDim2.new(0,0,0,0), "Out", "Sine", .25, true)
-	uiFrame2:TweenPosition(UDim2.new(0,0,.865,0), "Out", "Sine", .25, true)
+	--uiFrame1:TweenPosition(UDim2.new(0,0,0,0), "Out", "Sine", .25, true)
+	--uiFrame2:TweenPosition(UDim2.new(0,0,.865,0), "Out", "Sine", .25, true)
 	if player.Character then
 		player.Character.Humanoid.WalkSpeed = 12
 	end
