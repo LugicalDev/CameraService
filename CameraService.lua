@@ -295,7 +295,13 @@ local function updateCamera(deltaTime)
 	if self.Zoom > 0 and self.Smoothness > 0 then
 		local function damper()
 			local hum = currentCharacter:FindFirstChild("Humanoid")
-			if hum and hum:GetState() == Enum.HumanoidStateType.Jumping or hum:GetState() == Enum.HumanoidStateType.Freefall then
+			local humState
+		
+			if hum then
+				humState = hum:GetState()
+			end
+		
+			if (humState == Enum.HumanoidStateType.Jumping) or (humState == Enum.HumanoidStateType.Freefall) then
 				lapsed = 0
 				return desiredTime * 3.33
 			end
@@ -305,7 +311,7 @@ local function updateCamera(deltaTime)
 			else		
 				return math.max(desiredTime, desiredTime * (3.33 - (lapsed - (1 / deltaTime)) * .03))
 			end
-
+		
 		end
 		desired2 = damper()
 	end
