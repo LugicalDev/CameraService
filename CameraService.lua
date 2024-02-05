@@ -231,7 +231,7 @@ local function raycastWorld(currentZoom, rotationCFrame)
 		params.FilterDescendantsInstances = {currentCharacter, CameraService.Host}
 	end
 
-	local landRay = workspace:Raycast((currentCamPosition), (rotationCFrame * Vector3.new(0, 0, currentZoom)), params)
+	local landRay = workspace:Raycast(currentCamPosition, (rotationCFrame * CameraService.Offset * Vector3.new(0, 0, currentZoom)), params)
 	local zoom: number = currentZoom
 
 	--> Allow clipping through transluscent parts
