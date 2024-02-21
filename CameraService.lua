@@ -142,6 +142,7 @@ local propertyTypes = {
 local CameraService = {
 	Offset = CFrame.new(),
 	TiltFactor = CFrame.fromEulerAnglesYXZ(0,0,0),
+	Angle = 60,
 	Host = currentCharacter:WaitForChild("Humanoid").RigType == Enum.HumanoidRigType.R15 and currentCharacter:WaitForChild("HumanoidRootPart") or currentCharacter:WaitForChild("Torso"),
 }
 
@@ -155,7 +156,7 @@ local function hideBodyParts(__type: string)
 		--> Set-up the rotation for shift-locking
 		local hum = currentCharacter:FindFirstChildWhichIsA("Humanoid")
 		if hum then
-			hum.AutoRotate = math.abs(CameraService.Offset.X) <= 1.4 and true or false
+			hum.AutoRotate = math.abs(CameraService.Offset.X) <= 1.4 and not CameraService.AlignChar and true or false
 		end
 
 		--> Hide/unhide body parts when changing between views
@@ -264,7 +265,7 @@ local function updateCamera(deltaTime)
 	--> Clamp the y-vals for camera rotating
 	cameraRotation = Vector2.new(
 		self.xLock and self.atX or cameraRotation.X, 
-		self.yLock and self.atY or math.clamp(cameraRotation.Y, math.rad(-60), math.rad(60))
+		self.yLock and self.atY or math.clamp(cameraRotation.Y, math.rad(-self.Angle), math.rad(self.Angle))
 	) 
 	currentCamPosition = self.Host.Position + Vector3.new(0, self.Host.Parent and self.Host.Parent == currentCharacter and 2.5 or 0,0)
 
@@ -296,11 +297,11 @@ local function updateCamera(deltaTime)
 		local function damper()
 			local hum = currentCharacter:FindFirstChild("Humanoid")
 			local humState
-		
+
 			if hum then
 				humState = hum:GetState()
 			end
-		
+
 			if (humState == Enum.HumanoidStateType.Jumping) or (humState == Enum.HumanoidStateType.Freefall) then
 				lapsed = 0
 				return desiredTime * 3.33
@@ -311,7 +312,7 @@ local function updateCamera(deltaTime)
 			else		
 				return math.max(desiredTime, desiredTime * (3.33 - (lapsed - (1 / deltaTime)) * .03))
 			end
-		
+
 		end
 		desired2 = damper()
 	end
@@ -383,11 +384,11 @@ function CameraService:SetCameraView(__type: string) --> Used to change views (i
 
 		--> Resets it back to non-scriptable, Roblox default camera
 		self.LockMouse = false
-		cam.CameraSubject = currentCharacter:WaitForChild("Humanoid")
+		cam.CameraSubject = 
 		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 		cam.CameraType = Enum.CameraType.Custom
 		workspace.Retargeting = Enum.AnimatorRetargetingMode.Default
-
+		currentCharacter:WaitForChild("Humanoid").AutoRotate = true
 
 	elseif cameraSettings[__type] then
 
@@ -441,7 +442,7 @@ function CameraService:SetCameraView(__type: string) --> Used to change views (i
 				--> Update rotation once if not console; console updates rotation on each frame
 				if not console then
 					cameraRotation -= differenceVector
-					cameraRotation = Vector2.new(self.xLock and self.atX or cameraRotation.X, self.yLock and self.atY or math.clamp(cameraRotation.Y, math.rad(-60), math.rad(60)))
+					cameraRotation = Vector2.new(self.xLock and self.atX or cameraRotation.X, self.yLock and self.atY or math.clamp(cameraRotation.Y, math.rad(-self.Angle), math.rad(self.Angle)))
 				end
 			end
 			UserInputService.MouseBehavior = self.LockMouse and Enum.MouseBehavior.LockCenter or rightHold and Enum.MouseBehavior.LockCurrentPosition or Enum.MouseBehavior.Default
@@ -635,6 +636,11 @@ end
 --> Set up dynamic wobbling
 function CameraService:SetWobbling(value: number)
 	self.Wobble = value
+end
+
+--> Set up the vertical range for angles
+function CameraService:SetVerticalRange(angle: number) --> DO INPUT IN DEGREES
+	self.Angle = math.abs(angle)
 end
 
 
