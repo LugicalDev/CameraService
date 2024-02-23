@@ -384,7 +384,7 @@ function CameraService:SetCameraView(__type: string) --> Used to change views (i
 
 		--> Resets it back to non-scriptable, Roblox default camera
 		self.LockMouse = false
-		cam.CameraSubject = 
+		cam.CameraSubject = nil
 		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 		cam.CameraType = Enum.CameraType.Custom
 		workspace.Retargeting = Enum.AnimatorRetargetingMode.Default
