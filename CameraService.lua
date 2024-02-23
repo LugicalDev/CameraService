@@ -32,7 +32,7 @@
         "Smoothness" (number): Determines how smooth the camera movement is.
         	Intervals from 0-1 are suggested. Intervals higher could be used to create a "cinematic" effect.
         "Offset" (CFrame): Determines the offset/positioning away from the camera host.
-        Can be used to simulate shift-lock.
+        	Can be used to simulate shift-lock.
         "LockMouse" (boolean): Has the mouse locked in at the center.
 	"AlignChar" (boolean): If set to true, the character will rotate itself based off the camera (highly advised for shift-locks and first person)
 	"BodyFollow" (boolean): If AlignChar is NOT enabled, BodyFollow allows for an effect that has the upper body slightly rotate based off the mouse location.
