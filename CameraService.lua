@@ -30,12 +30,13 @@
         "MaxZoom" (number): Determines how far the player can zoom out. In studs.
         "Zoom" (number): The current distance the camera is away from the host.
         "Smoothness" (number): Determines how smooth the camera movement is.
-        Intervals from 0-1 are suggested. Intervals higher could be used to create a "cinematic" effect.
+        	Intervals from 0-1 are suggested. Intervals higher could be used to create a "cinematic" effect.
         "Offset" (CFrame): Determines the offset/positioning away from the camera host.
-        Can be used to simulate shift-lock.
+        	Can be used to simulate shift-lock.
         "LockMouse" (boolean): Has the mouse locked in at the center.
-		"AlignChar" (boolean): If set to true, the character will rotate itself based off the camera (highly advised for shift-locks and first person)
-		"BodyFollow" (boolean): If AlignChar is NOT enabled, BodyFollow allows for an effect that has the upper body slightly rotate based off the mouse location.
+	"AlignChar" (boolean): If set to true, the character will rotate itself based off the camera (highly advised for shift-locks and first person)
+	"BodyFollow" (boolean): If AlignChar is NOT enabled, BodyFollow allows for an effect that has the upper body slightly rotate based off the mouse location.
+	"Wobble" (number): Determines how much the character wobbles when the player moves.
 
     > :ChangeSensitivity(val: number)
     Changes the rate at which the camera moves. 
@@ -55,9 +56,17 @@
     Tilts the camera across the z-axis on whatever object it is currently focusing on. 
     Useful for creating camera effects. Input a number in degrees.
 
-	> :TiltAllAxes(y: number, x: number, z: number)
+    > :TiltAllAxes(y: number, x: number, z: number)
     Like :Tilt, but allows you to adjust all 3 axes. Most likely use-case would be for creating camera effects.
-	Inputs in Y, X, Z order.
+    Inputs in Y, X, Z order.
+
+    > :SetWobbling(value: number)
+    Changes the wobble value of the given Camera property.  This is equivalent to - CameraService:Change("Wobble", value, false)
+    Input a number.
+
+    > :SetVerticalRange(angle: number)
+    Changes the vertical range of motion.
+    Input a number in degrees.
 
     Created by @Lugical | Reased September, 2022
 --]]
@@ -638,11 +647,11 @@ function CameraService:SetWobbling(value: number)
 	self.Wobble = value
 end
 
+
 --> Set up the vertical range for angles
 function CameraService:SetVerticalRange(angle: number) --> DO INPUT IN DEGREES
 	self.Angle = math.abs(angle)
 end
-
 
 
 player.CharacterAdded:Connect(function(char) --> Have camera reset focus to new character.
