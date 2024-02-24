@@ -3,7 +3,7 @@
     Open-sourced, custom camera system for Roblox experiences.
     Find more ease in implementing beautiful, breath-taking camera effects into your place.
 
-    API:
+    API REFERENCE:
     > :SetCameraView(__type: string)
     Sets the camera to a certain view, such as first person, shift-lock, or some other.
     Will error if CameraService cannot find the camera view.
@@ -65,10 +65,11 @@
     Input a number.
 
     > :SetVerticalRange(angle: number)
-    Changes the vertical range of motion.
-    Input a number in degrees.
+    Changes the vertical range of motion (i.e. how far up and down a player can look).
+    Input a number in degrees from 0 (least range of motion) to 89 (most).
 
-    Created by @Lugical | Reased September, 2022
+    Created by @Lugical | Relased September, 2022
+    Version 2.1.1 | Feb. 2024
 --]]
 
 
@@ -296,7 +297,6 @@ local function updateCamera(deltaTime)
 	--> Damping the motion of the camera for smoothing
 	local camPos = raycastWorld(self.Zoom, rotationCFrame) 
 	local camCFrame = (rotationCFrame * self.TiltFactor * self.Offset) + camPos
-	--print(self.Smoothness)
 	local desiredTime = self.Smoothness ^ 2 * 0.05 + 0.02 * self.Smoothness +0.005
 	local lerpFactor = math.min(1, deltaTime / desiredTime)
 	local targetCFrame =  cam.CFrame:Lerp(camCFrame, lerpFactor)
@@ -393,7 +393,7 @@ function CameraService:SetCameraView(__type: string) --> Used to change views (i
 
 		--> Resets it back to non-scriptable, Roblox default camera
 		self.LockMouse = false
-		cam.CameraSubject = nil
+		cam.CameraSubject = currentCharacter:WaitForChild("Humanoid")
 		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 		cam.CameraType = Enum.CameraType.Custom
 		workspace.Retargeting = Enum.AnimatorRetargetingMode.Default
@@ -650,7 +650,7 @@ end
 
 --> Set up the vertical range for angles
 function CameraService:SetVerticalRange(angle: number) --> DO INPUT IN DEGREES
-	self.Angle = math.abs(angle)
+	self.Angle = math.clamp(math.abs(angle), 0, 89)
 end
 
 
