@@ -38,6 +38,7 @@
         	Can be used to simulate shift-lock.
 		"Wobble" (number): Adjusts the factor for dynamic wobbling. Same functionality as :SetWobbling
         "LockMouse" (boolean): Has the mouse locked in at the center.
+		"RotSmoothness" (number): Only for 1st-person views. Allows more customization of smoothness for panning
 		"AlignChar" (boolean): If set to true, the character will rotate itself based off the camera (highly advised for shift-locks and first person)
 		"BodyFollow" (boolean): If AlignChar is NOT enabled, BodyFollow allows for an effect that has the upper body slightly rotate based off the mouse location.
 
@@ -92,7 +93,7 @@ local TWEEN_INFO = TweenInfo.new(.3, Enum.EasingStyle.Quint, Enum.EasingDirectio
 local currentCamPosition = Vector3.zero
 local cameraRotation = Vector2.zero
 local currentCharacter = player.Character or player.CharacterAdded:Wait()
-local offset = CFrame.new()
+local offset = Vector3.zero
 local updateShake = 0
 local delta;
 local differenceVector;
@@ -102,13 +103,12 @@ local neckCache;
 --> Built-in camera views
 local cameraSettings = { 
 	["Default"] = {},
-	["FirstPerson"] = {Wobble = 2.25, CharacterVisibility = "None", Smoothness = 1, Zoom = 0, AlignChar = true, Offset = CFrame.new(0,0,0), LockMouse = true, MinZoom = 0, MaxZoom = 0, BodyFollow = true},
-	["FirstPersonVariant"] = {Wobble = 2.25, CharacterVisibility = "Body", Smoothness = .35, Zoom = 0, AlignChar = true, Offset = CFrame.new(0,0.2,.75), LockMouse = true, MinZoom = 0, MaxZoom = 0, BodyFollow = true},
+	["FirstPerson"] = {Wobble = 2.25, CharacterVisibility = "None", Smoothness = 1, RotSmoothness = 0, Zoom = 0, AlignChar = true, Offset = CFrame.new(0,0,0), LockMouse = true, MinZoom = 0, MaxZoom = 0, BodyFollow = true},
+	["FirstPersonVariant"] = {Wobble = 2.25, CharacterVisibility = "Body", Smoothness = .35, RotSmoothness = 0, Zoom = 0, AlignChar = true, Offset = CFrame.new(0,0.2,.75), LockMouse = true, MinZoom = 0, MaxZoom = 0, BodyFollow = true},
 	["ThirdPerson"] = {Wobble = 4, CharacterVisibility = "All", Smoothness = .7, Zoom = 10, AlignChar = false, Offset = CFrame.new(0,0,0), LockMouse = false, MinZoom = 5, MaxZoom = 15, BodyFollow = true},
 	["ShiftLock"] = {Wobble = 4, CharacterVisibility = "All", Smoothness = 0.7, Zoom = 7.5, Offset = CFrame.new(1.75, 0.5, 1), LockMouse = true, AlignChar = true, MinZoom = 2, MaxZoom = 15, BodyFollow = true},
 	["Cinematic"] = {
 		Smoothness = 5,
-		RotSmoothness = 5,
 		CharacterVisibility = "All",
 		MinZoom = 10,
 		MaxZoom = 10,
@@ -129,6 +129,7 @@ local propertyTypes = {
 	["CharacterVisibility"] = "All",
 	["Smoothness"] = 0.5, --> If you're looking to get a smooth effect, I HIGHLY suggest values of 0.3+
 	["Zoom"] = 10,
+	["RotSmoothness"] = 1,
 	["AlignChar"] = false,
 	["Offset"] = CFrame.new(),
 	["MinZoom"] = 5,
@@ -205,7 +206,7 @@ local function calculateShakingOffset(intensity: number): Vector3
 end
 
 --> @raycastWorld: correct zooms to avoid clipping parts
-local function raycastWorld(currentZoom: number, rotationCFrame: CFrameValue): CFrameValue 
+local function raycastWorld(origin, direction) 
 	--> Set params w/blacklist
 	local params = RaycastParams.new()
 	params.IgnoreWater = true
@@ -214,26 +215,27 @@ local function raycastWorld(currentZoom: number, rotationCFrame: CFrameValue): C
 	else
 		params.FilterDescendantsInstances = {currentCharacter, CameraService.Host}
 	end
-
+	local pos = (currentCamPosition + offset) -- no Offset property applied yet
 	--> Allow clipping through transluscent parts
-	local landRay = workspace:Raycast(currentCamPosition + offset, (rotationCFrame * Vector3.new(0, 0, currentZoom)), params)
-	local zoom = currentZoom
+	local landRay = workspace:Raycast(origin, direction, params)
 	if landRay and landRay.Distance and landRay.Instance then 
-		if landRay.Instance:IsA("BasePart") then
-			zoom = landRay.Instance.Transparency <= 0.8 and landRay.Distance * 0.9 or currentZoom
+		if landRay.Instance:IsA("BasePart") or landRay.Instance:IsA("UnionOperation") then	
+			direction *= (landRay.Distance * .9 / direction.Magnitude)
 		else
-			zoom = landRay.Distance - 1
+			direction *= (landRay.Distance * .95 / direction.Magnitude)
 		end
 	end
 
 	--> Cframe * Vector3 to zoom out in proper direction.
-	return (currentCamPosition + offset) + (rotationCFrame * Vector3.new(0, 0, zoom)) 
+	return origin + direction
 
 end
 
 
 --> @updateCamera: update camera orientation + pos @ each frame
 local lapsed = 1000 --> Used for dampening while jumping/falling
+local arrowKeyAngle = 0
+local pastCamRot = CFrame.Angles(0,0,0)
 local function updateCamera(deltaTime: number) 
 
 	local self = CameraService
@@ -246,17 +248,16 @@ local function updateCamera(deltaTime: number)
 		self.xLock and self.atX or cameraRotation.X, 
 		self.yLock and self.atY or math.clamp(cameraRotation.Y, math.rad(-self.Angle), math.rad(self.Angle))
 	) 
-	
+
 	currentCamPosition = self.Host.Position + Vector3.new(0, self.Host.Parent and self.Host.Parent == currentCharacter and 2.5 or 0,0)
 
 	--> Convert cameraRotation into an angle CFrame (YXZ = Angles)
-	local arrowKeyAngle = 0
 	if UserInputService:IsKeyDown(Enum.KeyCode.Right) then
-		arrowKeyAngle += 1
+		arrowKeyAngle += .045
 	elseif UserInputService:IsKeyDown(Enum.KeyCode.Left) then
-		arrowKeyAngle -= 1
+		arrowKeyAngle -= .045
 	end
-	local rotationCFrame = CFrame.fromEulerAnglesYXZ(cameraRotation.Y + arrowKeyAngle, cameraRotation.X, 0)
+	local rotationCFrame = CFrame.fromEulerAnglesYXZ(cameraRotation.Y, cameraRotation.X - arrowKeyAngle, 0)
 	updateShake = updateShake < math.random(2,3) and updateShake + 1 or 0
 	offset = self.Shaking and offset and updateShake == 0 and calculateShakingOffset(self.ShakingIntensity) or self.Shaking and offset or Vector3.new(0,0,0)
 	local yCFOffset = CFrame.fromEulerAnglesYXZ(0,0,0)
@@ -269,12 +270,20 @@ local function updateCamera(deltaTime: number)
 	end
 
 	--> Damping the motion of the camera for smoothing
-	local camPos = raycastWorld(self.Zoom, rotationCFrame) 
-	local oldPos = cam.CFrame
-	local camCFrame = (rotationCFrame * self.TiltFactor * self.Offset)
 	local desiredTime = self.Smoothness ^ 2 * 0.05 + 0.02 * self.Smoothness +0.005
 	local lerpFactor = math.min(1, deltaTime / desiredTime)
-	local targetCFrame = cam.CFrame:Lerp(camCFrame, lerpFactor) + (self.RotSmoothness == 0 and camPos or oldPos:Lerp(camPos, lerpFactor))
+	
+	if self.MinZoom == 0 and self.MaxZoom == 0 and self.RotSmoothness > self.Smoothness then
+		local desiredTime2 = self.RotSmoothness ^ 2 * 0.05 + 0.02 * self.RotSmoothness +0.005
+		local lerpFactor2 = math.min(1, deltaTime / desiredTime2)
+		rotationCFrame = self.RotSmoothness > 0 and pastCamRot:Lerp(rotationCFrame, lerpFactor2) or rotationCFrame
+	end
+	
+	pastCamRot = rotationCFrame
+	local camCFrame = (rotationCFrame * self.Offset * self.TiltFactor) + currentCamPosition + offset + (rotationCFrame * Vector3.new(0,0,self.Zoom))
+	local camPos = raycastWorld(currentCamPosition + offset, camCFrame.p - offset - currentCamPosition)
+	camCFrame = (camCFrame - camCFrame.p) + camPos
+	local targetCFrame = cam.CFrame:Lerp(camCFrame, lerpFactor)
 	local desired2 = desiredTime
 	local lerp2
 	if self.Zoom > 0 and self.Smoothness > 0 then
@@ -301,7 +310,7 @@ local function updateCamera(deltaTime: number)
 		end
 		desired2 = damper()
 	end
-	
+
 	lerp2 = desired2 ~= desiredTime and cam.CFrame:Lerp(camCFrame, math.min(1, deltaTime / desired2)) or nil
 	cam.CFrame = self.Smoothness <= 0 and camCFrame or CFrame.new(targetCFrame.X, lerp2 and lerp2.Y or targetCFrame.Y, targetCFrame.Z) * targetCFrame.Rotation * yCFOffset 
 

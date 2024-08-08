@@ -22,6 +22,7 @@ local function resetToNormal()
 	CameraService:ChangeFOV(70, false)
 end
 
+task.wait(1) --> Not needed, might be nice to allow time to load
 CameraService:SetCameraView("ThirdPerson")
 
 --[[ 2D Platformer Example
