@@ -96,7 +96,7 @@ local currentCharacter = player.Character or player.CharacterAdded:Wait()
 local offset = Vector3.zero
 local updateShake = 0
 local delta;
-local differenceVector;
+local differenceVector = Vector2.zero;
 local waistCache;
 local neckCache;
 
@@ -210,6 +210,7 @@ local function raycastWorld(origin, direction)
 	--> Set params w/blacklist
 	local params = RaycastParams.new()
 	params.IgnoreWater = true
+	params.RespectCanCollide = true
 	if CameraService.Host.Parent and CameraService.Host.Parent ~= workspace and CameraService.Host.Parent:IsA("Model") then
 		params.FilterDescendantsInstances = {currentCharacter, CameraService.Host.Parent}
 	else
