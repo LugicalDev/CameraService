@@ -38,7 +38,6 @@
         	Can be used to simulate shift-lock.
 		"Wobble" (number): Adjusts the factor for dynamic wobbling. Same functionality as :SetWobbling
         "LockMouse" (boolean): Has the mouse locked in at the center.
-		"RotSmoothness" (number): Only for 1st-person views. Allows more customization of smoothness for panning
 		"AlignChar" (boolean): If set to true, the character will rotate itself based off the camera (highly advised for shift-locks and first person)
 		"BodyFollow" (boolean): If AlignChar is NOT enabled, BodyFollow allows for an effect that has the upper body slightly rotate based off the mouse location.
 
@@ -95,7 +94,7 @@ local cameraRotation = Vector2.zero
 local currentCharacter = player.Character or player.CharacterAdded:Wait()
 local offset = Vector3.zero
 local updateShake = 0
-local delta;
+local delta = 0;
 local differenceVector = Vector2.zero;
 local waistCache;
 local neckCache;
@@ -210,7 +209,6 @@ local function raycastWorld(origin, direction)
 	--> Set params w/blacklist
 	local params = RaycastParams.new()
 	params.IgnoreWater = true
-	params.RespectCanCollide = true
 	if CameraService.Host.Parent and CameraService.Host.Parent ~= workspace and CameraService.Host.Parent:IsA("Model") then
 		params.FilterDescendantsInstances = {currentCharacter, CameraService.Host.Parent}
 	else
@@ -244,6 +242,7 @@ local function updateCamera(deltaTime: number)
 	if UserInputService.GamepadEnabled then 
 		cameraRotation -= differenceVector
 	end
+	differenceVector = Vector2.zero
 	--> Clamp the y-vals for camera rotating
 	cameraRotation = Vector2.new(
 		self.xLock and self.atX or cameraRotation.X, 
@@ -537,7 +536,7 @@ end
 --> @SetCameraHost: for when you change the object the camera focuses on
 function CameraService:SetCameraHost(newHost: BasePart)
 	assert(not newHost or typeof(newHost) == "Instance" and newHost:IsA("BasePart"), "[CameraService] :SetCameraHost() only accepts a BasePart parameter, or none at all. ")
-	self.Host = newHost or currentCharacter:FindFirstChild("HumanoidRootPart") or currentCharacter:FindFirstChild("Torso")
+	self.Host = newHost or currentCharacter:FindFirstChild("HumanoidRootPart")
 end
 
 
